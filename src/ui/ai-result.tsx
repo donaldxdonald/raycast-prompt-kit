@@ -19,7 +19,12 @@ type ResultState =
   | { status: "cancelled"; text: string }
   | { status: "failure"; text: string; error: ExtensionError };
 
-function resultMarkdown(taskTitle: string, state: ResultState): string {
+function closeUnterminatedFences(text: string): string {
+  const fences = text.match(/```/g)?.length ?? 0;
+  return fences % 2 === 1 ? `${text}\n\`\`\`` : text;
+}
+
+function resultMarkdown(state: ResultState): string {
   const truncationNotice =
     state.status === "success" && state.truncatedSources.length > 0
       ? `\n\n---\n\nSome input was shortened to match the configured source limit. Shortened sources: ${state.truncatedSources
@@ -29,7 +34,7 @@ function resultMarkdown(taskTitle: string, state: ResultState): string {
 
   switch (state.status) {
     case "loading":
-      return state.text || `# ${taskTitle}\n\nGenerating a response...`;
+      return closeUnterminatedFences(state.text);
     case "success":
       return `${state.text}${truncationNotice}`;
     case "cancelled":
@@ -93,33 +98,39 @@ export function AIResult({ task, input, onEditTask }: AIResultProps) {
     };
   }, [regenerate]);
 
+  const waitingForFirstToken = state.status === "loading" && !state.text;
+
   return (
     <Detail
       navigationTitle={task.title}
       isLoading={state.status === "loading"}
-      markdown={resultMarkdown(task.title, state)}
+      markdown={resultMarkdown(state)}
       actions={
         <ActionPanel>
-          {state.status === "loading" ? (
-            <Action
-              title="Cancel generation"
-              icon={Icon.Stop}
-              onAction={() => activeRequest.current?.controller.abort()}
-            />
-          ) : null}
-          {state.text ? (
-            <Action.CopyToClipboard title="Copy result" content={state.text} />
-          ) : null}
-          {state.text ? <Action.Paste title="Paste result" content={state.text} /> : null}
-          <Action
-            title="Regenerate"
-            icon={Icon.ArrowClockwise}
-            shortcut={Keyboard.Shortcut.Common.Refresh}
-            onAction={() => void regenerate()}
-          />
-          {onEditTask ? <Action title="Edit task" icon={Icon.Pencil} onAction={onEditTask} /> : null}
-          {!onEditTask ? <TargetAISettingsAction task={task} /> : null}
-          <OpenAISettingsAction />
+          <ActionPanel.Section>
+            {state.status === "loading" ? (
+              <Action
+                title="Cancel generation"
+                icon={Icon.Stop}
+                onAction={() => activeRequest.current?.controller.abort()}
+              />
+            ) : null}
+            {state.text ? <Action.CopyToClipboard title="Copy result" content={state.text} /> : null}
+            {state.text ? <Action.Paste title="Paste result" content={state.text} /> : null}
+            {waitingForFirstToken ? null : (
+              <Action
+                title="Regenerate"
+                icon={Icon.ArrowClockwise}
+                shortcut={Keyboard.Shortcut.Common.Refresh}
+                onAction={() => void regenerate()}
+              />
+            )}
+          </ActionPanel.Section>
+          <ActionPanel.Section>
+            {onEditTask ? <Action title="Edit task" icon={Icon.Pencil} onAction={onEditTask} /> : null}
+            {!onEditTask ? <TargetAISettingsAction task={task} /> : null}
+            <OpenAISettingsAction />
+          </ActionPanel.Section>
         </ActionPanel>
       }
     />
