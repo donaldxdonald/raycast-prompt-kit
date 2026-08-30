@@ -108,11 +108,7 @@ export function AIResult({ task, input, onEditTask }: AIResultProps) {
             />
           ) : null}
           {state.text ? (
-            <Action.CopyToClipboard
-              title="Copy result"
-              content={state.text}
-              shortcut={{ modifiers: ["cmd"], key: "c" }}
-            />
+            <Action.CopyToClipboard title="Copy result" content={state.text} />
           ) : null}
           {state.text ? <Action.Paste title="Paste result" content={state.text} /> : null}
           <Action
