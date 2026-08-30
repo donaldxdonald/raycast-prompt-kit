@@ -77,9 +77,9 @@
   "dependencies": {
     "@raycast/api": "^1.104.20",
     "@raycast/utils": "^2.2.7",
-    "@xsai/model": "0.5.0-beta.8",
-    "@xsai/shared": "0.5.0-beta.8",
-    "@xsai/stream-text": "0.5.0-beta.8"
+    "@xsai/model": "0.5.0",
+    "@xsai/shared": "0.5.0",
+    "@xsai/stream-text": "0.5.0"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^2.2.0",
